@@ -35,6 +35,39 @@ app.add_middleware(
 db = TenderDatabase()
 notifier = TenderNotifier(db=db)
 
+@app.on_event("startup")
+def startup_event():
+    """Au démarrage du serveur cloud, vérifie et télécharge automatiquement les marchés TUNEPS."""
+    try:
+        from collector import TunepsCollector
+        from enricher import TenderEnricher
+        collector = TunepsCollector(db=db)
+        enricher = TenderEnricher(db=db)
+        logger.info("Synchronisation initiale des marchés TUNEPS au démarrage...")
+        collector.sync_latest(max_items=30, only_open=True)
+        enricher.process_all_pending(limit=30)
+        logger.info("Synchronisation initiale terminée avec succès.")
+    except Exception as e:
+        logger.warning(f"Note startup sync: {e}")
+
+@app.get("/api/sync")
+def force_sync():
+    """Endpoint déclenchant manuellement la collecte TUNEPS."""
+    from collector import TunepsCollector
+    from enricher import TenderEnricher
+    collector = TunepsCollector(db=db)
+    enricher = TenderEnricher(db=db)
+    stats = collector.sync_latest(max_items=30, only_open=True)
+    enr_count = enricher.process_all_pending(limit=30)
+    db_stats = db.get_stats()
+    return {
+        "status": "SUCCESS",
+        "scanned": stats["scanned"],
+        "new": stats["new_inserted"],
+        "enriched": enr_count,
+        "total_in_db": db_stats["total_tenders"]
+    }
+
 # Configuration de la passerelle de paiement (Konnect.network / Flouci)
 KONNECT_API_KEY = os.getenv("KONNECT_API_KEY", "test_key_sample")
 KONNECT_RECEIVER_WALLET = os.getenv("KONNECT_WALLET_ID", "sample_wallet")
