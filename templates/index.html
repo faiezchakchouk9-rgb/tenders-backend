@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tenders.tn | Veille Automatisée des Marchés Publics en Tunisie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-emerald-500 selection:text-white">
+
+    <!-- Navigation Bar -->
+    <nav class="border-b border-slate-800/80 backdrop-blur sticky top-0 z-50 bg-slate-950/70">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">🇹🇳</span>
+                <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">Tenders.tn</span>
+                <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">AI Powered</span>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a href="#demo" class="text-sm font-medium text-slate-400 hover:text-white transition">Avis du Jour</a>
+                <a href="#tarifs" class="text-sm font-medium text-slate-400 hover:text-white transition">Tarifs</a>
+                <a href="#subscribe" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-sm transition shadow-lg shadow-emerald-500/20">Essai 7 Jours Gratuit</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="max-w-5xl mx-auto px-6 pt-20 pb-16 text-center">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-xs text-slate-300 mb-6">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Connecté 24/7 au portail national <b>TUNEPS</b></span>
+        </div>
+        <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+            Ne manquez plus aucun <br/>
+            <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">Marché Public en Tunisie</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+            Recevez directement sur votre <b>WhatsApp</b> les appels d'offres qualifiés et filtrés par IA selon votre métier et vos gouvernorats.
+        </p>
+
+        <!-- Metrics bar -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+            <div>
+                <div class="text-2xl font-bold text-emerald-400">60 800+</div>
+                <div class="text-xs text-slate-400">Avis indexés TUNEPS</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-cyan-400">&lt; 2 min</div>
+                <div class="text-xs text-slate-400">Délai alerte WhatsApp</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-teal-400">100%</div>
+                <div class="text-xs text-slate-400">Automatisé par IA</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-white">7 Jours</div>
+                <div class="text-xs text-slate-400">Gratuits sans engagement</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Moteur de Recherche Plein-Texte TUNEPS-3 & Vitrine Live -->
+    <section id="demo" class="max-w-6xl mx-auto px-6 py-12">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+                <h2 class="text-2xl font-bold flex items-center gap-2">
+                    <span>Recherche Intelligente TUNEPS</span>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">SQLite FTS5</span>
+                </h2>
+                <p class="text-sm text-slate-400">Recherchez instantanément parmi les marchés publics avec conditions d'attribution détaillées</p>
+            </div>
+            <div id="search-perf-badge" class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-emerald-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span id="search-perf-text">0 résultats en 0ms</span>
+            </div>
+        </div>
+
+        <!-- Barre de recherche et filtres -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800/90 shadow-xl mb-6 space-y-4">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 text-lg">
+                    🔍
+                </div>
+                <input type="text" id="search-input" oninput="debounceSearch()" placeholder="Rechercher par mot-clé, acheteur, objet, critère (ex: informatique, travaux, caméra, moins disant, Tunis, santé...)" 
+                    class="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white text-sm">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div>
+                    <select id="filter-category" onchange="performSearch()" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 outline-none focus:border-emerald-500">
+                        <option value="ALL">Tous les secteurs</option>
+                        <option value="IT_TELECOM">💻 IT & Télécoms</option>
+                        <option value="BTP_CONSTRUCTION">🏗️ BTP, Génie Civil & Travaux</option>
+                        <option value="ENERGIE_EAU_ENVIRONNEMENT">⚡ Énergie, Eau & Environnement</option>
+                        <option value="SANTE_MEDICAL">🏥 Santé & Médical</option>
+                        <option value="TRANSPORT_MECANIQUE">🚗 Transport & Mécanique</option>
+                        <option value="ETUDES_CONSEIL">📐 Études & Conseil</option>
+                        <option value="FOURNITURES_SERVICES">📦 Fournitures & Services</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="filter-governorate" onchange="performSearch()" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 outline-none focus:border-emerald-500">
+                        <option value="ALL">Tous les gouvernorats</option>
+                        <option value="Tunis">Tunis</option>
+                        <option value="Ariana">Ariana</option>
+                        <option value="Ben Arous">Ben Arous</option>
+                        <option value="Manouba">Manouba</option>
+                        <option value="Nabeul">Nabeul</option>
+                        <option value="Zaghouan">Zaghouan</option>
+                        <option value="Bizerte">Bizerte</option>
+                        <option value="Béja">Béja</option>
+                        <option value="Jendouba">Jendouba</option>
+                        <option value="Kef">Le Kef</option>
+                        <option value="Siliana">Siliana</option>
+                        <option value="Sousse">Sousse</option>
+                        <option value="Monastir">Monastir</option>
+                        <option value="Mahdia">Mahdia</option>
+                        <option value="Sfax">Sfax</option>
+                        <option value="Kairouan">Kairouan</option>
+                        <option value="Kasserine">Kasserine</option>
+                        <option value="Sidi Bouzid">Sidi Bouzid</option>
+                        <option value="Gabès">Gabès</option>
+                        <option value="Médenine">Médenine</option>
+                        <option value="Tataouine">Tataouine</option>
+                        <option value="Gafsa">Gafsa</option>
+                        <option value="Tozeur">Tozeur</option>
+                        <option value="Kébili">Kébili</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-950 border border-slate-800">
+                    <label for="filter-only-open" class="text-xs text-slate-300 cursor-pointer select-none">Marchés ouverts uniquement</label>
+                    <input type="checkbox" id="filter-only-open" checked onchange="performSearch()" class="rounded text-emerald-500 focus:ring-emerald-500 h-4 w-4">
+                </div>
+            </div>
+        </div>
+
+        <!-- Grille des Résultats -->
+        <div id="tenders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 animate-pulse h-48"></div>
+            <div class="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 animate-pulse h-48"></div>
+            <div class="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 animate-pulse h-48"></div>
+        </div>
+
+        <!-- Panneau Interactif Testeur WhatsApp Bot -->
+        <div class="mt-10 p-6 rounded-3xl bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-500/20 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <span class="text-2xl">🤖</span>
+                    <div>
+                        <h3 class="font-bold text-base text-emerald-400">Assistant Interactif WhatsApp & Telegram</h3>
+                        <p class="text-xs text-slate-400">Testez en direct la réponse que vos clients reçoivent lorsqu'ils cherchent par message</p>
+                    </div>
+                </div>
+                <span class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Green-API / Telegram Live</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-1 space-y-3">
+                    <input type="text" id="bot-test-query" placeholder="Ex: informatique, travaux, sousse..." 
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-emerald-500 outline-none">
+                    <button onclick="testBotQuery()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-emerald-500/20">
+                        ⚡ Simuler la réponse WhatsApp
+                    </button>
+                    <div class="text-[11px] text-slate-400">
+                        💡 Suggestion de test : 
+                        <button onclick="quickTestBot('informatique')" class="text-emerald-400 underline">informatique</button>, 
+                        <button onclick="quickTestBot('travaux')" class="text-emerald-400 underline">travaux</button>, 
+                        <button onclick="quickTestBot('moins disant')" class="text-emerald-400 underline">moins disant</button>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <div id="bot-response-box" class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-emerald-300 whitespace-pre-wrap max-h-48 overflow-y-auto">
+Tapez un mot-clé à gauche et cliquez sur « Simuler la réponse WhatsApp » pour voir la mise en page instantanée...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Onboarding Self-Service Form -->
+    <section id="subscribe" class="max-w-4xl mx-auto px-6 py-16">
+        <div class="p-8 sm:p-12 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-32 -right-32 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold mb-3">Configurez vos Alertes WhatsApp</h2>
+                <p class="text-slate-400 text-sm">Définissez vos secteurs et commencez à recevoir vos opportunités en 2 minutes.</p>
+            </div>
+
+            <form id="onboarding-form" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-400 mb-2">Nom de l'entreprise *</label>
+                        <input type="text" id="company_name" required placeholder="Ex: Horizon Travaux & BTP" 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-400 mb-2">Numéro WhatsApp *</label>
+                        <input type="tel" id="phone" required placeholder="Ex: 98 123 456 ou 22 345 678" 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-400 mb-2">Adresse E-mail Professionnelle *</label>
+                    <input type="email" id="email" required placeholder="contact@votre-entreprise.tn" 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white text-sm">
+                </div>
+
+                <!-- Secteurs d'activité -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-400 mb-2">Secteurs ciblés (Sélectionnez un ou plusieurs) *</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <label class="flex items-center space-x-3 p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                            <input type="checkbox" name="category" value="IT_TELECOM" checked class="rounded text-emerald-500 focus:ring-emerald-500">
+                            <span class="text-xs font-medium">💻 IT & Télécoms</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                            <input type="checkbox" name="category" value="BTP_CONSTRUCTION" checked class="rounded text-emerald-500 focus:ring-emerald-500">
+                            <span class="text-xs font-medium">🏗️ BTP & Travaux</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                            <input type="checkbox" name="category" value="ENERGIE_EAU_ENVIRONNEMENT" class="rounded text-emerald-500 focus:ring-emerald-500">
+                            <span class="text-xs font-medium">⚡ Énergie & Eau</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                            <input type="checkbox" name="category" value="SANTE_MEDICAL" class="rounded text-emerald-500 focus:ring-emerald-500">
+                            <span class="text-xs font-medium">🏥 Santé & Médical</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                            <input type="checkbox" name="category" value="TRANSPORT_MECANIQUE" class="rounded text-emerald-500 focus:ring-emerald-500">
+                            <span class="text-xs font-medium">🚗 Véhicules & Pneus</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                            <input type="checkbox" name="category" value="FOURNITURES_SERVICES" class="rounded text-emerald-500 focus:ring-emerald-500">
+                            <span class="text-xs font-medium">📦 Fournitures & Serv.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Portée Régionale -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-400 mb-2">Zone géographique</label>
+                        <select id="region_scope" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none text-white text-sm">
+                            <option value="ALL">Toute la Tunisie (24 Gouvernorats)</option>
+                            <option value="GRAND_TUNIS">Grand Tunis (Tunis, Ariana, Ben Arous, Manouba)</option>
+                            <option value="NORD">Nord (Bizerte, Nabeul, Béja, Jendouba, Zaghouan)</option>
+                            <option value="SAHEL">Sahel & Centre (Sousse, Monastir, Mahdia, Sfax)</option>
+                            <option value="SUD">Sud (Gabès, Médenine, Tataouine, Tozeur, Gafsa)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-400 mb-2">Mots-clés optionnels</label>
+                        <input type="text" id="keywords" placeholder="Ex: caméra, clôture, scanner" 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none text-white text-sm">
+                    </div>
+                </div>
+
+                <!-- Choix du Plan -->
+                <div id="tarifs" class="pt-4">
+                    <label class="block text-xs font-semibold uppercase text-slate-400 mb-3">Choisissez votre formule</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <label class="p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-500/5 cursor-pointer flex flex-col justify-between plan-card" onclick="selectPlan(event, 'TRIAL')">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm">Essai Gratuit</span>
+                                <input type="radio" name="plan_choice" value="TRIAL" checked class="text-emerald-500">
+                            </div>
+                            <div class="text-2xl font-extrabold text-emerald-400 mb-1">0 DT</div>
+                            <div class="text-xs text-slate-400">7 jours d'alertes illimitées sans engagement</div>
+                        </label>
+
+                        <label class="p-4 rounded-2xl border border-slate-800 bg-slate-950 hover:border-slate-700 cursor-pointer flex flex-col justify-between plan-card" onclick="selectPlan(event, 'STARTER')">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm">Starter PME</span>
+                                <input type="radio" name="plan_choice" value="STARTER" class="text-emerald-500">
+                            </div>
+                            <div class="text-2xl font-extrabold text-white mb-1">49 DT<span class="text-xs font-normal text-slate-400">/mois</span></div>
+                            <div class="text-xs text-slate-400">1 secteur au choix + alertes instantanées</div>
+                        </label>
+
+                        <label class="p-4 rounded-2xl border border-slate-800 bg-slate-950 hover:border-slate-700 cursor-pointer flex flex-col justify-between plan-card" onclick="selectPlan(event, 'PRO')">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm text-cyan-400">Pro Illimité ⭐</span>
+                                <input type="radio" name="plan_choice" value="PRO" class="text-emerald-500">
+                            </div>
+                            <div class="text-2xl font-extrabold text-white mb-1">129 DT<span class="text-xs font-normal text-slate-400">/mois</span></div>
+                            <div class="text-xs text-slate-400">Tous secteurs + mots-clés + résumés IA complets</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submit-btn" class="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-base transition shadow-xl shadow-emerald-500/25 flex items-center justify-center space-x-2">
+                    <span>🚀 Activer mes Alertes WhatsApp</span>
+                </button>
+            </form>
+
+            <!-- Feedback modal -->
+            <div id="result-box" class="hidden mt-6 p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center">
+                <div class="text-4xl mb-2">✅</div>
+                <h3 id="result-title" class="text-lg font-bold text-emerald-400 mb-1"></h3>
+                <p id="result-msg" class="text-sm text-slate-300 mb-4"></p>
+                <div id="payment-action" class="hidden">
+                    <a id="pay-btn" href="#" class="inline-block px-6 py-3 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm hover:bg-emerald-400">
+                        💳 Procéder au paiement sécurisé (Konnect / Flouci)
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 py-8 text-center text-xs text-slate-500">
+        <p>© 2026 Tenders.tn — Service indépendant d'agrégation et d'alerte sur les marchés publics tunisiens (TUNEPS).</p>
+        <p class="mt-1">Paiements sécurisés par passerelles agréées Banque Centrale de Tunisie (Konnect / GIM-TEL).</p>
+    </footer>
+
+    <script>
+        let searchTimeout = null;
+
+        function debounceSearch() {
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch();
+            }, 250);
+        }
+
+        async function performSearch() {
+            const query = document.getElementById('search-input').value.trim();
+            const category = document.getElementById('filter-category').value;
+            const governorate = document.getElementById('filter-governorate').value;
+            const onlyOpen = document.getElementById('filter-only-open').checked;
+
+            const grid = document.getElementById('tenders-grid');
+            const perfBadge = document.getElementById('search-perf-badge');
+            const perfText = document.getElementById('search-perf-text');
+
+            try {
+                const params = new URLSearchParams({
+                    q: query,
+                    category: category,
+                    governorate: governorate,
+                    only_open: onlyOpen ? "true" : "false",
+                    limit: "12"
+                });
+
+                const res = await fetch(`/api/tenders/search?${params.toString()}`);
+                const data = await res.json();
+
+                perfBadge.classList.remove('hidden');
+                perfText.innerText = `${data.total} résultat${data.total > 1 ? 's' : ''} en ${data.query_time_ms} ms (FTS5)`;
+
+                grid.innerHTML = '';
+
+                if (data.tenders.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full py-12 text-center text-slate-400 bg-slate-900/30 rounded-2xl border border-slate-800">
+                            <div class="text-4xl mb-3">🔍</div>
+                            <h3 class="text-base font-bold text-slate-300 mb-1">Aucun appel d'offres ne correspond à vos critères</h3>
+                            <p class="text-xs text-slate-500">Essayez d'élargir votre recherche, de sélectionner « Tous les gouvernorats » ou de décocher « Marchés ouverts uniquement ».</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                data.tenders.forEach(t => {
+                    // Badges conditions de soumission TUNEPS-3
+                    let badgesHtml = '';
+                    if (t.eval_method) {
+                        badgesHtml += `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">⚖️ ${t.eval_method}</span> `;
+                    }
+                    if (t.guarantee_type) {
+                        badgesHtml += `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20">🛡️ ${t.guarantee_type}</span> `;
+                    }
+                    if (t.doc_price) {
+                        const priceColor = t.doc_price.toLowerCase().includes('gratuit') ? 'bg-teal-500/10 text-teal-300 border-teal-500/20' : 'bg-slate-800 text-slate-300 border-slate-700';
+                        badgesHtml += `<span class="px-2 py-0.5 rounded text-[10px] font-mono ${priceColor} border">📄 CDC: ${t.doc_price}</span> `;
+                    }
+
+                    const lieu = t.execution_place || t.governorate || 'National';
+
+                    grid.innerHTML += `
+                        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800/80 flex flex-col justify-between hover:border-slate-700 hover:shadow-lg transition">
+                            <div>
+                                <div class="flex items-center justify-between text-xs mb-3">
+                                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${t.category || 'Général'}</span>
+                                    <span class="text-slate-300 font-mono text-[11px] flex items-center gap-1">📍 <b>${lieu}</b></span>
+                                </div>
+                                <h3 class="font-bold text-sm text-white line-clamp-2 mb-2 leading-snug">${t.title}</h3>
+                                <p class="text-xs text-slate-400 mb-3 flex items-center gap-1">🏢 <span class="line-clamp-1">${t.buyer}</span></p>
+
+                                <!-- Badges TUNEPS-3 -->
+                                <div class="flex flex-wrap gap-1.5 mb-3">
+                                    ${badgesHtml}
+                                </div>
+
+                                <p class="text-xs text-slate-300 line-clamp-2 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/60 mb-3">${t.ai_summary || 'Synthèse officielle en cours'}</p>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                                <div>
+                                    <span class="text-rose-400 font-mono text-[11px] block">⏳ Dépôt: ${t.deadline ? t.deadline.split(' ')[0] : 'Voir avis'}</span>
+                                    ${t.opening_date ? `<span class="text-slate-400 font-mono text-[10px] block">📂 Pli: ${t.opening_date.split(' ')[0]}</span>` : ''}
+                                </div>
+                                <a href="${t.url}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-slate-950 border border-emerald-500/30 font-medium transition text-xs">
+                                    Voir TUNEPS →
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) {
+                console.error("Erreur recherche tenders:", e);
+            }
+        }
+
+        async function testBotQuery() {
+            const q = document.getElementById('bot-test-query').value.trim();
+            if (!q) return;
+            const box = document.getElementById('bot-response-box');
+            box.innerText = "⏳ Génération de la réponse WhatsApp du bot...";
+
+            try {
+                const res = await fetch('/api/bot/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: q, channel: "WHATSAPP" })
+                });
+                const data = await res.json();
+                box.innerText = data.reply;
+            } catch(err) {
+                box.innerText = "Erreur de communication : " + err;
+            }
+        }
+
+        function quickTestBot(kw) {
+            document.getElementById('bot-test-query').value = kw;
+            testBotQuery();
+        }
+
+        // Initialisation de la recherche au chargement
+        performSearch();
+
+        function selectPlan(e, plan) {
+            document.querySelectorAll('.plan-card').forEach(el => {
+                el.classList.remove('border-emerald-500', 'bg-emerald-500/5', 'border-2');
+                el.classList.add('border-slate-800', 'bg-slate-950');
+            });
+            const selected = e.currentTarget;
+            selected.classList.add('border-emerald-500', 'bg-emerald-500/5', 'border-2');
+            selected.classList.remove('border-slate-800', 'bg-slate-950');
+            selected.querySelector('input[type="radio"]').checked = true;
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳ Enregistrement en cours...</span>';
+
+            const categories = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(el => el.value);
+            const plan = document.querySelector('input[name="plan_choice"]:checked').value;
+            const regionScope = document.getElementById('region_scope').value;
+
+            let govs = ["ALL"];
+            if (regionScope === "GRAND_TUNIS") govs = ["Tunis", "Ariana", "Ben Arous", "Manouba"];
+            else if (regionScope === "NORD") govs = ["Bizerte", "Nabeul", "Béja", "Jendouba", "Zaghouan"];
+            else if (regionScope === "SAHEL") govs = ["Sousse", "Monastir", "Mahdia", "Sfax"];
+            else if (regionScope === "SUD") govs = ["Gabès", "Médenine", "Tataouine", "Tozeur", "Gafsa"];
+
+            const keywordsRaw = document.getElementById('keywords').value;
+            const keywords = keywordsRaw ? keywordsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+            const payload = {
+                company_name: document.getElementById('company_name').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                categories: categories.length > 0 ? categories : ["ALL"],
+                governorates: govs,
+                keywords: keywords,
+                plan: plan
+            };
+
+            try {
+                const res = await fetch('/api/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                document.getElementById('onboarding-form').classList.add('hidden');
+                const rBox = document.getElementById('result-box');
+                rBox.classList.remove('hidden');
+
+                if (data.status === "ACTIVE_TRIAL") {
+                    document.getElementById('result-title').innerText = "Félicitations ! Votre Essai 7 Jours est Actif";
+                    document.getElementById('result-msg').innerText = "Un message de bienvenue vient d'être envoyé sur votre WhatsApp. Vous recevrez toutes les opportunités parues aujourd'hui.";
+                } else if (data.status === "PAYMENT_REQUIRED") {
+                    document.getElementById('result-title').innerText = "Abonnement réservé !";
+                    document.getElementById('result-msg').innerText = `Veuillez finaliser votre paiement sécurisé de ${data.amount_tnd} TND pour déclencher les notifications.`;
+                    document.getElementById('pay-btn').href = data.payment_url;
+                    document.getElementById('payment-action').classList.remove('hidden');
+                }
+            } catch(err) {
+                alert("Erreur lors de l'inscription : " + err);
+                btn.disabled = false;
+                btn.innerHTML = '<span>🚀 Activer mes Alertes WhatsApp</span>';
+            }
+        }
+    </script>
+</body>
+</html>
