@@ -11,7 +11,13 @@ import requests
 from typing import List, Dict, Any, Tuple
 from datetime import datetime
 from database import TenderDatabase, TenderNotice, Subscriber
-from telegram_bot import send_telegram_message, load_telegram_config
+
+# Import Telegram optionnel (plateforme 100% WhatsApp)
+try:
+    from telegram_bot import send_telegram_message, load_telegram_config
+except ImportError:
+    def send_telegram_message(*args, **kwargs): pass
+    def load_telegram_config(): return {}
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')

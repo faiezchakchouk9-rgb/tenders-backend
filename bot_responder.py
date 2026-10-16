@@ -13,7 +13,13 @@ import requests
 from typing import Dict, Any, List, Optional, Tuple
 from database import TenderDatabase, TenderNotice
 from whatsapp_gateway import send_whatsapp_message, load_whatsapp_config, clean_phone_number
-from telegram_bot import send_telegram_message, load_telegram_config
+
+# Import Telegram optionnel
+try:
+    from telegram_bot import send_telegram_message, load_telegram_config
+except ImportError:
+    def send_telegram_message(*args, **kwargs): pass
+    def load_telegram_config(): return {}
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
