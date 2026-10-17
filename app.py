@@ -156,6 +156,62 @@ def bot_query_api(req: BotQueryRequest):
                 send_telegram_message(reply, conf["bot_token"], req.phone_or_chat_id)
     return {"query": req.query, "reply": reply}
 
+@app.get("/api/webhook/meta")
+def meta_webhook_verify(request: Request):
+    """Vérification du webhook par Meta (hub.challenge)."""
+    params = request.query_params
+    mode = params.get("hub.mode")
+    token = params.get("hub.verify_token")
+    challenge = params.get("hub.challenge")
+
+    # Jeton de vérification secret
+    VERIFY_TOKEN = os.getenv("META_VERIFY_TOKEN", "tenders_webhook_token_2026")
+
+    if mode == "subscribe" and token == VERIFY_TOKEN:
+        logger.info("Webhook Meta vérifié avec succès !")
+        return int(challenge) if challenge.isdigit() else challenge
+    raise HTTPException(status_code=403, detail="Verification token mismatch")
+
+@app.post("/api/webhook/meta")
+async def meta_webhook_handler(request: Request):
+    """Reçoit les messages entrants des clients sur WhatsApp et répond avec les marchés en direct."""
+    try:
+        body = await request.json()
+        entry = body.get("entry", [])
+        if not entry:
+            return {"status": "NO_ENTRY"}
+
+        changes = entry[0].get("changes", [])
+        if not changes:
+            return {"status": "NO_CHANGES"}
+
+        value = changes[0].get("value", {})
+        messages = value.get("messages", [])
+
+        if messages:
+            msg = messages[0]
+            sender = msg.get("from")  # Numéro du client
+            msg_type = msg.get("type")
+
+            text_body = ""
+            if msg_type == "text":
+                text_body = msg.get("text", {}).get("body", "").strip()
+
+            if sender and text_body:
+                logger.info(f"Message reçu sur Meta WhatsApp de +{sender} : '{text_body}'")
+                from bot_responder import BotResponder
+                bot = BotResponder(db=db)
+                reply = bot.search_and_format_reply(text_body, channel="WHATSAPP", limit=3)
+                
+                from whatsapp_gateway import send_whatsapp_message
+                send_whatsapp_message(sender, reply)
+                return {"status": "REPLIED", "sender": sender, "query": text_body}
+
+    except Exception as e:
+        logger.error(f"Erreur traitement webhook Meta: {e}")
+
+    return {"status": "RECEIVED"}
+
 @app.post("/api/webhook/green-api")
 async def green_api_webhook(request: Request):
     """Reçoit les messages WhatsApp entrants de Green-API et y répond automatiquement."""
