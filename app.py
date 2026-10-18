@@ -574,41 +574,47 @@ def mock_payment_page(sub_id: int, amount: int = 49):
     </html>
     """
 
+def _find_html_content(filename: str) -> Optional[str]:
+    """Recherche un fichier HTML dans public/, templates/ ou à la racine."""
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "public", filename),
+        os.path.join(os.path.dirname(__file__), "templates", filename),
+        os.path.join(os.path.dirname(__file__), filename),
+        os.path.join(os.getcwd(), "public", filename),
+        os.path.join(os.getcwd(), "templates", filename),
+        os.path.join(os.getcwd(), filename),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    return f.read()
+            except Exception:
+                pass
+    return None
+
 @app.get("/", response_class=HTMLResponse)
 def render_landing_page():
     """Sert le fichier HTML de la plateforme connectée à Firebase."""
-    pub_path = os.path.join(os.path.dirname(__file__), "public", "index.html")
-    if os.path.exists(pub_path):
-        with open(pub_path, "r", encoding="utf-8") as f:
-            return f.read()
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
-    with open(template_path, "r", encoding="utf-8") as f:
-        return f.read()
+    content = _find_html_content("index.html")
+    if content:
+        return content
+    return "<h1>Bienvenue sur Tenders.tn</h1>"
 
 @app.get("/cgu", response_class=HTMLResponse)
 def render_cgu_page():
     """Sert la page des Conditions Générales d'Utilisation (CGU) conformes à la loi tunisienne."""
-    pub_path = os.path.join(os.path.dirname(__file__), "public", "cgu.html")
-    if os.path.exists(pub_path):
-        with open(pub_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read(), status_code=200, media_type="text/html; charset=utf-8")
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "cgu.html")
-    if os.path.exists(template_path):
-        with open(template_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read(), status_code=200, media_type="text/html; charset=utf-8")
+    content = _find_html_content("cgu.html")
+    if content:
+        return HTMLResponse(content=content, status_code=200, media_type="text/html; charset=utf-8")
     return HTMLResponse(content="<h1>Conditions Générales d'Utilisation non trouvées</h1>", status_code=404, media_type="text/html; charset=utf-8")
 
 @app.get("/confidentialite", response_class=HTMLResponse)
 def render_confidentialite_page():
     """Sert la Politique de Confidentialité conforme à la Loi organique n° 2004-63 (INPDP)."""
-    pub_path = os.path.join(os.path.dirname(__file__), "public", "confidentialite.html")
-    if os.path.exists(pub_path):
-        with open(pub_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read(), status_code=200, media_type="text/html; charset=utf-8")
-    template_path = os.path.join(os.path.dirname(__file__), "templates", "confidentialite.html")
-    if os.path.exists(template_path):
-        with open(template_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read(), status_code=200, media_type="text/html; charset=utf-8")
+    content = _find_html_content("confidentialite.html")
+    if content:
+        return HTMLResponse(content=content, status_code=200, media_type="text/html; charset=utf-8")
     return HTMLResponse(content="<h1>Politique de Confidentialité non trouvée</h1>", status_code=404, media_type="text/html; charset=utf-8")
 
 # --- Endpoints Dashboard Client Privé & Pipeline de Candidatures ---
@@ -1018,15 +1024,10 @@ def test_client_whatsapp_alert(sub_id: int):
 @app.get("/client", response_class=HTMLResponse)
 def render_client_dashboard():
     """Sert l'interface du Dashboard Client Privé."""
-    pub_path = os.path.join(os.path.dirname(__file__), "public", "dashboard.html")
-    if os.path.exists(pub_path):
-        with open(pub_path, "r", encoding="utf-8") as f:
-            return f.read()
-    tmpl_path = os.path.join(os.path.dirname(__file__), "templates", "dashboard.html")
-    if os.path.exists(tmpl_path):
-        with open(tmpl_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>Dashboard client en cours de génération...</h1>"
+    content = _find_html_content("dashboard.html")
+    if content:
+        return content
+    return "<h1>Dashboard client en cours de génération... (dashboard.html introuvable)</h1>"
 
 # --- Feature 1 : Checklist Administrative & Modèle d'Engagement Décret 2014-1039 ---
 
@@ -2704,15 +2705,10 @@ def render_tender_printable(tender_id: int, sub_id: Optional[int] = None):
 @app.get("/admin", response_class=HTMLResponse)
 def render_admin_dashboard():
     """Sert l'interface du Backoffice Administrateur Fondateur."""
-    pub_path = os.path.join(os.path.dirname(__file__), "public", "admin.html")
-    if os.path.exists(pub_path):
-        with open(pub_path, "r", encoding="utf-8") as f:
-            return f.read()
-    tmpl_path = os.path.join(os.path.dirname(__file__), "templates", "admin.html")
-    if os.path.exists(tmpl_path):
-        with open(tmpl_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>Backoffice administrateur...</h1>"
+    content = _find_html_content("admin.html")
+    if content:
+        return content
+    return "<h1>Backoffice administrateur... (admin.html introuvable)</h1>"
 
 @app.get("/api/admin/metrics")
 def get_admin_metrics():
