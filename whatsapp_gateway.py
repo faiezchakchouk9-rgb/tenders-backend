@@ -14,19 +14,27 @@ logger = logging.getLogger("WhatsAppGateway")
 CONFIG_FILE = "whatsapp_config.json"
 
 def load_whatsapp_config() -> Dict[str, str]:
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except Exception:
+        pass
+
+    cfg = {}
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                cfg = json.load(f)
         except Exception:
             pass
+
     return {
-        "provider": "meta",
-        "fallback_provider": "green-api",
-        "meta_phone_number_id": os.getenv("META_PHONE_NUMBER_ID", ""),
-        "meta_access_token": os.getenv("META_ACCESS_TOKEN", ""),
-        "instance_id": os.getenv("GREEN_API_INSTANCE_ID", ""),
-        "token": os.getenv("GREEN_API_TOKEN", "")
+        "provider": os.getenv("WHATSAPP_PROVIDER") or cfg.get("provider", "meta"),
+        "fallback_provider": cfg.get("fallback_provider", "green-api"),
+        "meta_phone_number_id": os.getenv("META_PHONE_NUMBER_ID") or cfg.get("meta_phone_number_id", ""),
+        "meta_access_token": os.getenv("META_ACCESS_TOKEN") or cfg.get("meta_access_token", ""),
+        "instance_id": os.getenv("GREEN_API_INSTANCE_ID") or cfg.get("instance_id", ""),
+        "token": os.getenv("GREEN_API_TOKEN") or cfg.get("token", "")
     }
 
 def clean_phone_number(phone: str) -> str:

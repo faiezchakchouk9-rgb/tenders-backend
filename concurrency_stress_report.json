@@ -1,0 +1,43 @@
+{
+  "verdict": "APPROVE",
+  "verdict_reasons": [],
+  "total_execution_time_seconds": 21.14,
+  "wal_concurrency_metrics": {
+    "num_threads": 16,
+    "total_operations": 448,
+    "duration_seconds": 8.933727979660034,
+    "throughput_ops_per_sec": 50.1470383942727,
+    "lock_errors_count": 0,
+    "other_errors_count": 0,
+    "journal_mode": "wal",
+    "integrity_check": "ok",
+    "checkpoint_result": [
+      0,
+      856,
+      856
+    ],
+    "wal_file_present": true,
+    "shm_file_present": true,
+    "wal_size_bytes": 4326032,
+    "shm_size_bytes": 32768,
+    "latencies_ms": {
+      "min": 1.3612000038847327,
+      "max": 8206.473400001414,
+      "avg": 218.94288937537567
+    }
+  },
+  "document_generation_metrics": {
+    "zip_packs_tested": 10,
+    "pdf_documents_tested": 50,
+    "docx_documents_tested": 50,
+    "page_count_violations": [],
+    "signature_block_violations": [],
+    "zip_integrity_errors": []
+  },
+  "whatsapp_failover_metrics": {
+    "scenarios_tested": 6,
+    "scenarios_passed": 6,
+    "failures": []
+  },
+  "timestamp_utc": "2026-10-18T11:45:38.744154+00:00"
+}

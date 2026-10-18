@@ -27,7 +27,7 @@ logger = logging.getLogger("TunepsCollector")
 class TunepsCollector:
     API_URL = "https://www.tuneps.tn/api2/portail/bid/master/data"
     DETAIL_API_URL = "https://www.tuneps.tn/api2/portail/bid/master"
-    BASE_DETAIL_URL = "https://www.tuneps.tn/portail/offres/details"
+    BASE_DETAIL_URL = "https://www.tuneps.tn/#/portail/offres/details"
     
     DEFAULT_HEADERS = {
         "Content-Type": "application/json",
@@ -182,7 +182,7 @@ class TunepsCollector:
                     continue
 
                 total_scanned += 1
-                detail_url = f"{self.BASE_DETAIL_URL}/{master_id}/{bid_no}/{bid_seq}"
+                detail_url = f"{self.BASE_DETAIL_URL}/{master_id}/{bid_no}"
 
                 # Ingestion des métadonnées détaillées
                 details = self.fetch_tender_details(master_id)

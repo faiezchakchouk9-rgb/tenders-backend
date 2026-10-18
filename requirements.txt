@@ -1,6 +1,23 @@
-requests>=2.31.0
-urllib3>=2.0.0
-fastapi>=0.110.0
-uvicorn>=0.28.0
-pydantic>=2.6.0
-jinja2>=3.1.0
+# ==============================================================================
+# Tenders.tn - Dépendances Python
+# ==============================================================================
+
+# Core Web
+requests>=2.31.0,<3.0.0
+urllib3>=2.0.0,<3.0.0
+fastapi>=0.110.0,<1.0.0
+uvicorn[standard]>=0.28.0,<1.0.0
+pydantic[email]>=2.6.0,<3.0.0
+jinja2>=3.1.0,<4.0.0
+
+# Génération de documents & Export
+python-docx>=1.1.0,<2.0.0
+reportlab>=4.0.0,<5.0.0
+pillow>=10.0.0,<11.0.0
+openpyxl>=3.1.0,<4.0.0
+
+# Configuration
+python-dotenv>=1.0.0,<2.0.0
+
+# Production
+gunicorn>=21.2.0,<23.0.0

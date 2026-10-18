@@ -1,0 +1,43 @@
+{
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true,
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "tenders-backend",
+          "region": "europe-west1"
+        }
+      },
+      {
+        "source": "/health",
+        "run": {
+          "serviceId": "tenders-backend",
+          "region": "europe-west1"
+        }
+      },
+      {
+        "source": "/dashboard",
+        "destination": "/dashboard.html"
+      },
+      {
+        "source": "/cgu",
+        "destination": "/cgu.html"
+      },
+      {
+        "source": "/confidentialite",
+        "destination": "/confidentialite.html"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+# ==============================================================================
+# Tenders.tn - Fichiers exclus du dépôt
+# ==============================================================================
+
+# Secrets & Configuration sensible
+.env
+serviceAccountKey.json
+whatsapp_config.json
+telegram_config.json
+firebase.json
+.firebaserc
+firestore.rules
+
+# Base de données
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Environnement virtuel
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archives de déploiement
+*.zip
+
+# Logs
+*.log
+logs/
+
+# Uploads utilisateurs
+uploads/
+
+# Firebase
+.firebase/

@@ -1,0 +1,32 @@
+# ==============================================================================
+# Tenders.tn - Docker Compose Production
+# ==============================================================================
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: tenders-tn
+    ports:
+      - '8000:8000'
+    env_file:
+      - .env
+    volumes:
+      - tenders-data:/app/data
+      - tenders-uploads:/app/uploads
+      - tenders-logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  tenders-data:
+    driver: local
+  tenders-uploads:
+    driver: local
+  tenders-logs:
+    driver: local

@@ -8,7 +8,7 @@ import sys
 import json
 import logging
 import requests
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from datetime import datetime
 from database import TenderDatabase, TenderNotice, Subscriber
 
@@ -89,6 +89,9 @@ class TenderNotifier:
         if conditions:
             conditions_block = "📋 *Conditions de soumission :*\n" + "\n".join(conditions) + "\n\n"
 
+        app_url = os.getenv("APP_BASE_URL", "https://tenders-backend-mpir.onrender.com")
+        bid_id = tender.ep_bid_master_id
+
         msg = (
             f"🔔 *NOUVEL APPEL D'OFFRES TUNEPS* 🇹🇳\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
@@ -100,7 +103,8 @@ class TenderNotifier:
             f"🏷️ *Tags :* {tags_str}\n\n"
             f"{conditions_block}"
             f"💡 *Synthèse IA :*\n{tender.ai_summary or 'Avis officiel disponible'}\n\n"
-            f"🔗 *Consulter l'avis sur TUNEPS :*\n{tender.url}\n"
+            f"🔗 *Fiche officielle TUNEPS :* {tender.url}\n"
+            f"📂 *Dossier de soumission Tenders.tn :* {app_url}/dashboard?tab=dossiers&tender={bid_id}\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
             f"⚡ _Alerte envoyée à {sub.company_name}_"
         )
@@ -189,6 +193,157 @@ class TenderNotifier:
             self.db.mark_as_notified(tender.ep_bid_master_id)
 
         return {"tenders_processed": len(tenders), "notifications_sent": sent_count}
+
+    def send_morning_briefing(self, subscriber_id: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Envoie le 'Briefing Matinal de 8h00' condensé et sur-mesure sur WhatsApp.
+        Contient :
+        1. Les opportunités ouvertes les plus pertinentes du jour
+        2. Les alertes de clôture imminente dans son classeur (J-3, J-2, J-1)
+        """
+        from whatsapp_gateway import send_whatsapp_message
+        now = datetime.now()
+        date_display = now.strftime("%d %B %Y").replace("October", "Octobre").replace("November", "Novembre")
+
+        if subscriber_id:
+            sub = self.db.get_subscriber_by_id(subscriber_id)
+            subscribers = [sub] if sub and sub.is_active else []
+        else:
+            subscribers = self.db.get_active_subscribers()
+
+        sent_count = 0
+        app_url = os.getenv("APP_BASE_URL", "https://tenders-backend-mpir.onrender.com")
+
+        for s in subscribers:
+            opportunities = self.db.get_subscriber_matched_tenders(s.id, limit=3)
+            bookmarks = self.db.get_subscriber_bookmarks(s.id)
+            urgent_bookmarks = [b for b in bookmarks if b.get("countdown", {}).get("urgency") in ["CRITICAL", "URGENT"]]
+
+            if not opportunities and not urgent_bookmarks:
+                continue
+
+            msg = f"🌅 *[BRIEFING MARCHÉS PUBLICS • {date_display.upper()}]*\n"
+            msg += f"Bonjour *{s.company_name}*,\nVoici votre point de veille TUNEPS du jour :\n\n"
+
+            if urgent_bookmarks:
+                msg += f"🚨 *RAPPEL DOSSIERS EN COURS :*\n"
+                for ub in urgent_bookmarks[:3]:
+                    bid_no = ub.get("bid_no")
+                    buyer = (ub.get("buyer_name") or "Acheteur")[:35]
+                    cd_lbl = ub.get("countdown", {}).get("label") or "Urgent"
+                    msg += f"• ⚠️ *{cd_lbl}* : N° {bid_no} - {buyer}\n"
+                msg += "\n"
+
+            if opportunities:
+                msg += f"🎯 *NOUVELLES OPPORTUNITÉS CIBLÉES :*\n"
+                for idx, op in enumerate(opportunities[:3], 1):
+                    title = (op.get("title_fr") or op.get("title_ar") or "Marché")[:60]
+                    gov = op.get("governorate") or "National"
+                    cd_lbl = op.get("countdown", {}).get("label") or ""
+                    bid_no = op.get("bid_no")
+                    msg += f"*{idx}. {title}...*\n"
+                    msg += f"   🏛️ {op.get('buyer_name')} | 📍 {gov}\n"
+                    msg += f"   ⏳ {cd_lbl} (Avis N° {bid_no})\n\n"
+
+            msg += f"📂 *Accéder à votre classeur :*\n{app_url}/dashboard\n\n"
+            msg += f"_Tenders.tn • Veille Automatisée 100% Zéro-Ops_"
+
+            success = send_whatsapp_message(s.phone, msg)
+            if success:
+                sent_count += 1
+                try:
+                    self.db.log_notification(
+                        tender_id=opportunities[0]["ep_bid_master_id"] if opportunities else 0,
+                        subscriber_id=s.id,
+                        channel="WHATSAPP_BRIEFING",
+                        status="SENT"
+                    )
+                except Exception:
+                    pass
+
+        return {"subscribers_scanned": len(subscribers), "briefings_sent": sent_count}
+
+    def send_weekly_briefing(self, subscriber_id: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Envoie le 'Briefing Hebdomadaire du Lundi Matin' sur WhatsApp aux abonnés actifs.
+        Résume les marchés prioritaires de la semaine, les dates limites, les cautionnements,
+        et fournit des liens directs vers le dossier de soumission et le tableau de bord.
+        """
+        from whatsapp_gateway import send_whatsapp_message
+        now = datetime.now()
+        date_display = now.strftime("%d %B %Y").replace("October", "Octobre").replace("November", "Novembre")
+
+        if subscriber_id:
+            sub = self.db.get_subscriber_by_id(subscriber_id)
+            subscribers = [sub] if sub and sub.is_active else []
+        else:
+            subscribers = self.db.get_active_subscribers()
+
+        sent_count = 0
+        app_url = os.getenv("APP_BASE_URL", "https://tenders-backend-mpir.onrender.com")
+
+        for s in subscribers:
+            tenders = self.db.get_subscriber_matched_tenders(s.id, limit=5)
+            first_tender_id = tenders[0].get("ep_bid_master_id", 0) if tenders else 0
+
+            msg = (
+                f"📅 *BRIEFING HEBDOMADAIRE TENDERS.TN — LUNDI MATIN*\n"
+                f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"Bonjour *{s.company_name}*,\n"
+                f"Voici votre sélection de marchés publics prioritaires pour la semaine ({date_display}) :\n\n"
+            )
+
+            if tenders:
+                for idx, t in enumerate(tenders, 1):
+                    title = (t.get("title_fr") or t.get("title_ar") or "Marché public")[:80]
+                    buyer = (t.get("buyer_name") or "Acheteur public")[:40]
+                    gov = t.get("governorate") or "National"
+                    deadline = t.get("deadline_date") or "Consulter l'avis"
+                    guarantee = t.get("guarantee_type") or "Non spécifié"
+                    cd_lbl = t.get("countdown", {}).get("label") or ""
+                    cd_str = f" ({cd_lbl})" if cd_lbl else ""
+                    bid_id = t.get("ep_bid_master_id")
+
+                    msg += (
+                        f"*{idx}. {title}*\n"
+                        f"   🏛️ *Acheteur :* {buyer} | 📍 {gov}\n"
+                        f"   ⏳ *Date limite :* {deadline}{cd_str}\n"
+                        f"   🛡️ *Cautionnement :* {guarantee}\n"
+                        f"   📂 *Dossier de soumission :* {app_url}/dashboard?tab=dossiers&tender={bid_id}\n\n"
+                    )
+            else:
+                msg += (
+                    f"Aucun nouvel appel d'offres ouvert pour vos secteurs cette semaine.\n"
+                    f"Consultez l'ensemble du catalogue directement sur votre espace client.\n\n"
+                )
+
+            msg += (
+                f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"🌐 *Consulter toutes vos opportunités sur votre espace client :*\n"
+                f"{app_url}/dashboard\n\n"
+                f"🚀 _Tenders.tn • Votre veille stratégique 100% Zéro-Ops_"
+            )
+
+            success = send_whatsapp_message(s.phone, msg)
+            if success:
+                sent_count += 1
+                try:
+                    self.db.log_notification(
+                        tender_id=first_tender_id,
+                        subscriber_id=s.id,
+                        channel="WHATSAPP_WEEKLY",
+                        status="SENT"
+                    )
+                except Exception as ex:
+                    logger.error(f"Erreur logging notification WHATSAPP_WEEKLY: {ex}")
+
+        return {
+            "success": True,
+            "briefings_sent": sent_count,
+            "subscribers_targeted": len(subscribers),
+            "subscribers_scanned": len(subscribers)
+        }
+
 
 def seed_demo_subscribers(db: TenderDatabase):
     existing = db.get_active_subscribers()
